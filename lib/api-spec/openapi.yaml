@@ -3,20 +3,38 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: دکان گھر - Urdu E-commerce & Logistics API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: categories
+    description: Product and vehicle categories
+  - name: products
+    description: Product management
+  - name: cart
+    description: Shopping cart
+  - name: orders
+    description: Order management
+  - name: vehicles
+    description: Vehicle listings
+  - name: bookings
+    description: Vehicle bookings
+  - name: admin
+    description: Admin operations
+  - name: payments
+    description: Payment methods
+  - name: dashboard
+    description: Dashboard summaries
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +42,578 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Categories
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List all categories
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [product, vehicle]
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create a category (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryBody"
+      responses:
+        "201":
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  /categories/{id}:
+    patch:
+      operationId: updateCategory
+      tags: [categories]
+      summary: Update a category (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCategoryBody"
+      responses:
+        "200":
+          description: Updated category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      operationId: deleteCategory
+      tags: [categories]
+      summary: Delete a category (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Products
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List all products
+      parameters:
+        - in: query
+          name: categoryId
+          schema:
+            type: integer
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: featured
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "201":
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{id}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get a single product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductBody"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Orders
+  /orders:
+    get:
+      operationId: listOrders
+      tags: [orders]
+      summary: List orders
+      parameters:
+        - in: query
+          name: sessionId
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Place an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderBody"
+      responses:
+        "201":
+          description: Created order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get an order
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateOrder
+      tags: [orders]
+      summary: Update order status (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrderBody"
+      responses:
+        "200":
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/track/{trackingNumber}:
+    get:
+      operationId: trackOrder
+      tags: [orders]
+      summary: Track an order by tracking number
+      parameters:
+        - in: path
+          name: trackingNumber
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+
+  # Vehicles
+  /vehicles:
+    get:
+      operationId: listVehicles
+      tags: [vehicles]
+      summary: List all vehicles
+      parameters:
+        - in: query
+          name: categoryId
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of vehicles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Vehicle"
+    post:
+      operationId: createVehicle
+      tags: [vehicles]
+      summary: Create a vehicle (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVehicleBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vehicle"
+
+  /vehicles/{id}:
+    patch:
+      operationId: updateVehicle
+      tags: [vehicles]
+      summary: Update a vehicle (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVehicleBody"
+      responses:
+        "200":
+          description: Updated vehicle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vehicle"
+    delete:
+      operationId: deleteVehicle
+      tags: [vehicles]
+      summary: Delete a vehicle (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Vehicle Bookings
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List vehicle bookings
+      parameters:
+        - in: query
+          name: sessionId
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Book a vehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingBody"
+      responses:
+        "201":
+          description: Created booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get a booking
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update booking address/rent (admin live edit)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBookingBody"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  # Payment Methods
+  /payment-methods:
+    get:
+      operationId: listPaymentMethods
+      tags: [payments]
+      summary: List online payment methods (set by admin)
+      responses:
+        "200":
+          description: List of payment methods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentMethod"
+    post:
+      operationId: createPaymentMethod
+      tags: [payments]
+      summary: Add a payment method (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePaymentMethodBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentMethod"
+
+  /payment-methods/{id}:
+    patch:
+      operationId: updatePaymentMethod
+      tags: [payments]
+      summary: Update a payment method (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePaymentMethodBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentMethod"
+    delete:
+      operationId: deletePaymentMethod
+      tags: [payments]
+      summary: Delete a payment method (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Admin Dashboard
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get admin dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  # Admin Auth
+  /admin/verify-pin:
+    post:
+      operationId: verifyAdminPin
+      tags: [admin]
+      summary: Verify admin PIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyAdminPinBody"
+      responses:
+        "200":
+          description: PIN verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthResponse"
+        "401":
+          description: Invalid PIN
+
+  /admin/reset-pin:
+    post:
+      operationId: resetAdminPin
+      tags: [admin]
+      summary: Reset admin PIN (sends email)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetAdminPinBody"
+      responses:
+        "200":
+          description: Reset initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +624,581 @@ components:
       required:
         - status
 
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        nameUrdu:
+          type: string
+        type:
+          type: string
+          enum: [product, vehicle]
+        icon:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - nameUrdu
+        - type
+        - sortOrder
+        - createdAt
+
+    CreateCategoryBody:
+      type: object
+      properties:
+        name:
+          type: string
+        nameUrdu:
+          type: string
+        type:
+          type: string
+          enum: [product, vehicle]
+        icon:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        sortOrder:
+          type: integer
+      required:
+        - name
+        - nameUrdu
+        - type
+
+    UpdateCategoryBody:
+      type: object
+      properties:
+        name:
+          type: string
+        nameUrdu:
+          type: string
+        icon:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        sortOrder:
+          type: integer
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        nameUrdu:
+          type: string
+        description:
+          type: ["string", "null"]
+        descriptionUrdu:
+          type: ["string", "null"]
+        price:
+          type: number
+        unit:
+          type: string
+          enum: [kg, gram, liter, pound, piece]
+        imageUrl:
+          type: ["string", "null"]
+        categoryId:
+          type: ["integer", "null"]
+        stock:
+          type: integer
+        featured:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - nameUrdu
+        - price
+        - unit
+        - stock
+        - featured
+        - createdAt
+
+    CreateProductBody:
+      type: object
+      properties:
+        name:
+          type: string
+        nameUrdu:
+          type: string
+        description:
+          type: ["string", "null"]
+        descriptionUrdu:
+          type: ["string", "null"]
+        price:
+          type: number
+        unit:
+          type: string
+          enum: [kg, gram, liter, pound, piece]
+        imageUrl:
+          type: ["string", "null"]
+        categoryId:
+          type: ["integer", "null"]
+        stock:
+          type: integer
+        featured:
+          type: boolean
+      required:
+        - name
+        - nameUrdu
+        - price
+        - unit
+        - stock
+
+    UpdateProductBody:
+      type: object
+      properties:
+        name:
+          type: string
+        nameUrdu:
+          type: string
+        description:
+          type: ["string", "null"]
+        descriptionUrdu:
+          type: ["string", "null"]
+        price:
+          type: number
+        unit:
+          type: string
+          enum: [kg, gram, liter, pound, piece]
+        imageUrl:
+          type: ["string", "null"]
+        categoryId:
+          type: ["integer", "null"]
+        stock:
+          type: integer
+        featured:
+          type: boolean
+
+    OrderItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        productNameUrdu:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        price:
+          type: number
+      required:
+        - productId
+        - productName
+        - productNameUrdu
+        - quantity
+        - unit
+        - price
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        trackingNumber:
+          type: string
+        sessionId:
+          type: string
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        address:
+          type: string
+        deliverySlot:
+          type: string
+          enum: ["07:00", "11:00", "16:00"]
+        paymentMethod:
+          type: string
+          enum: [cod, online]
+        subtotal:
+          type: number
+        deliveryCharge:
+          type: number
+        total:
+          type: number
+        totalWeight:
+          type: number
+        status:
+          type: string
+          enum: [pending, packed, on_the_way, delivered]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - trackingNumber
+        - sessionId
+        - customerName
+        - customerPhone
+        - address
+        - deliverySlot
+        - paymentMethod
+        - subtotal
+        - deliveryCharge
+        - total
+        - totalWeight
+        - status
+        - items
+        - createdAt
+        - updatedAt
+
+    CreateOrderBody:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        address:
+          type: string
+        deliverySlot:
+          type: string
+          enum: ["07:00", "11:00", "16:00"]
+        paymentMethod:
+          type: string
+          enum: [cod, online]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+      required:
+        - sessionId
+        - customerName
+        - customerPhone
+        - address
+        - deliverySlot
+        - paymentMethod
+        - items
+
+    UpdateOrderBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, packed, on_the_way, delivered]
+
+    Vehicle:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        nameUrdu:
+          type: string
+        type:
+          type: string
+          enum: [rickshaw, chigchi, carry_bolan, car, high_roof, bus]
+        imageUrl:
+          type: ["string", "null"]
+        baseRent:
+          type: number
+        description:
+          type: ["string", "null"]
+        descriptionUrdu:
+          type: ["string", "null"]
+        available:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - nameUrdu
+        - type
+        - baseRent
+        - available
+        - createdAt
+
+    CreateVehicleBody:
+      type: object
+      properties:
+        name:
+          type: string
+        nameUrdu:
+          type: string
+        type:
+          type: string
+          enum: [rickshaw, chigchi, carry_bolan, car, high_roof, bus]
+        imageUrl:
+          type: ["string", "null"]
+        baseRent:
+          type: number
+        description:
+          type: ["string", "null"]
+        descriptionUrdu:
+          type: ["string", "null"]
+        available:
+          type: boolean
+      required:
+        - name
+        - nameUrdu
+        - type
+        - baseRent
+
+    UpdateVehicleBody:
+      type: object
+      properties:
+        name:
+          type: string
+        nameUrdu:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        baseRent:
+          type: number
+        description:
+          type: ["string", "null"]
+        descriptionUrdu:
+          type: ["string", "null"]
+        available:
+          type: boolean
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: string
+        vehicleId:
+          type: integer
+        vehicleName:
+          type: string
+        vehicleNameUrdu:
+          type: string
+        vehicleType:
+          type: string
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        passengersDetail:
+          type: string
+        luggageDetail:
+          type: string
+        pickupAddress:
+          type: ["string", "null"]
+        dropoffAddress:
+          type: ["string", "null"]
+        adminAddress:
+          type: ["string", "null"]
+        agreedRent:
+          type: ["number", "null"]
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - sessionId
+        - vehicleId
+        - vehicleName
+        - vehicleNameUrdu
+        - vehicleType
+        - customerName
+        - customerPhone
+        - passengersDetail
+        - luggageDetail
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateBookingBody:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        vehicleId:
+          type: integer
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        passengersDetail:
+          type: string
+        luggageDetail:
+          type: string
+        pickupAddress:
+          type: ["string", "null"]
+        dropoffAddress:
+          type: ["string", "null"]
+      required:
+        - sessionId
+        - vehicleId
+        - customerName
+        - customerPhone
+        - passengersDetail
+        - luggageDetail
+
+    UpdateBookingBody:
+      type: object
+      properties:
+        adminAddress:
+          type: ["string", "null"]
+        agreedRent:
+          type: ["number", "null"]
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+
+    PaymentMethod:
+      type: object
+      properties:
+        id:
+          type: integer
+        bankName:
+          type: string
+        accountNumber:
+          type: string
+        holderName:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bankName
+        - accountNumber
+        - holderName
+        - active
+        - createdAt
+
+    CreatePaymentMethodBody:
+      type: object
+      properties:
+        bankName:
+          type: string
+        accountNumber:
+          type: string
+        holderName:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        active:
+          type: boolean
+      required:
+        - bankName
+        - accountNumber
+        - holderName
+
+    UpdatePaymentMethodBody:
+      type: object
+      properties:
+        bankName:
+          type: string
+        accountNumber:
+          type: string
+        holderName:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        active:
+          type: boolean
+
+    DashboardStats:
+      type: object
+      properties:
+        totalOrders:
+          type: integer
+        totalRevenue:
+          type: number
+        pendingOrders:
+          type: integer
+        deliveredOrders:
+          type: integer
+        totalBookings:
+          type: integer
+        pendingBookings:
+          type: integer
+        totalProducts:
+          type: integer
+        recentOrders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        recentBookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+      required:
+        - totalOrders
+        - totalRevenue
+        - pendingOrders
+        - deliveredOrders
+        - totalBookings
+        - pendingBookings
+        - totalProducts
+        - recentOrders
+        - recentBookings
+
+    VerifyAdminPinBody:
+      type: object
+      properties:
+        pin:
+          type: string
+      required:
+        - pin
+
+    AdminAuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        token:
+          type: string
+      required:
+        - success
+        - token
+
+    ResetAdminPinBody:
+      type: object
+      properties:
+        email:
+          type: string
+      required:
+        - email

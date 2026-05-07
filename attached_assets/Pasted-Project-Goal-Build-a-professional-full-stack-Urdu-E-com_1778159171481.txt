@@ -1,0 +1,57 @@
+Project Goal: Build a professional, full-stack Urdu E-commerce & Logistics web application named "دکان گھر" (Dukan Ghar). The app must be mobile-first, attractive, and optimized for village users.
+
+1. Visuals & UI/UX:
+
+App Name: "دکان گھر" (Use 'Jameel Noori Nastaleeq' or 'Noto Nastaliq Urdu' font).
+
+Theme: Modern UI with a Day/Night mode switch. Use a clean white/soft blue theme for Day and a dark/gold theme for Night.
+
+Navigation: Fixed top header with Search (should not move/center on click), Cart icon, and a Tracking (Package) icon.
+
+Bottom Nav: Home, Categories, Transport, Orders, Cart.
+
+2. Product & Category Logic:
+
+Categories: A 'Zumra Jaat' section on the home page.
+
+Admin Category Manager: A dedicated tab for Admin to Add/Edit/Delete categories for both products and vehicles.
+
+Product Cards: Display image, name, price, and unit. Add +/- buttons for quantity before the 'Add to Cart' button.
+
+Units: Support KG, Gram, Liter, and Pound (for cakes).
+
+3. Vehicle & Booking System:
+
+Listings: Rickshaw, Chigchi, Carry Bolan, Car, High-roof, Bus.
+
+User Side: A booking form with text inputs for "Sawarion/Bachon ki Tafseel" and "Saman ki Tafseel."
+
+Booking History: A section showing the user's past vehicle bookings with date and time.
+
+4. Advanced Admin Panel (Secure):
+
+Security: Admin panel must be hidden (not a public button). Access via a specific path. Add a Reset PIN feature linked to email: jafir0691824@gmail.com.
+
+Dashboard: First tab shows "Total Sales/Orders" cards. Other tabs for management.
+
+Live Updates: Admin can edit 'Address' and 'Rent' for vehicle bookings after calling the user; updates must show instantly on the user's side.
+
+Payment Management: A tab for Admin to set up Online Payment methods (Logo, Bank Name, A/C Number, Holder Name).
+
+5. Shipping & Checkout:
+
+Payment Options: 'Cash on Delivery' and 'Online Payment' (showing admin's bank details).
+
+Delivery Slots: 7:00 AM, 11:00 AM, and 4:00 PM.
+
+Delivery Charges Formula:
+
+Up to 8kg (or 8L): Rs. 50 flat.
+
+Above 8kg: Rs. 50 + Rs. 10 for every additional KG (e.g., 10kg = Rs. 70).
+
+6. Order Tracking:
+
+A dedicated page where users can search by Tracking Number. Below the search, show a history list of all their orders with current status (Pending/Packed/On the Way/Delivered).
+
+Tech Stack: Use HTML, CSS (Tailwind), JavaScript for Frontend, and Node.js with a database (like Firebase or NeDB) for Backend to ensure data persists.
