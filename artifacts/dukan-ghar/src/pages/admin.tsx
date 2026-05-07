@@ -325,37 +325,169 @@ function AdminProducts() {
 function AdminCategories() {
   const { data: categories } = useListCategories({});
   const createCategory = useCreateCategory();
+  const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [name, setName] = useState(""); const [nameUrdu, setNameUrdu] = useState(""); const [type, setType] = useState<"product" | "vehicle">("product");
+  const [name, setName] = useState("");
+  const [nameUrdu, setNameUrdu] = useState("");
+  const [type, setType] = useState<"product" | "vehicle">("product");
+  const [icon, setIcon] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [expandedIcon, setExpandedIcon] = useState<number | null>(null);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    createCategory.mutate({ data: { name, nameUrdu, type } }, {
-      onSuccess: () => { queryClient.invalidateQueries({ queryKey: getListCategoriesQueryKey() }); setName(""); setNameUrdu(""); toast({ title: "Category added!" }); },
+    createCategory.mutate({ data: { name, nameUrdu, type, icon: icon || null, imageUrl: imageUrl || null } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListCategoriesQueryKey() });
+        setName(""); setNameUrdu(""); setIcon(""); setImageUrl("");
+        toast({ title: "Category added!" });
+      },
+    });
+  };
+
+  const handleSaveIcon = (id: number, newIcon: string | null, newImageUrl: string | null) => {
+    updateCategory.mutate({ id, data: { icon: newIcon, imageUrl: newImageUrl } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListCategoriesQueryKey() });
+        setExpandedIcon(null);
+        toast({ title: "زمرہ اپڈیٹ ہو گیا!" });
+      },
     });
   };
 
   return (
     <div className="flex flex-col gap-4">
       <h2 className="urdu-text text-xl font-bold text-right">زمرہ مینجمنٹ</h2>
+
+      {/* Create Form */}
       <form onSubmit={handleCreate} className="bg-card border rounded-xl p-4 flex flex-col gap-3 shadow-sm">
-        <h3 className="font-semibold text-sm">Add Category</h3>
+        <h3 className="font-semibold text-sm">نیا زمرہ شامل کریں</h3>
         <div className="grid grid-cols-2 gap-2">
-          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Name" required />
-          <Input value={nameUrdu} onChange={e => setNameUrdu(e.target.value)} placeholder="نام" className="text-right urdu-text" required />
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Name (English)" required />
+          <Input value={nameUrdu} onChange={e => setNameUrdu(e.target.value)} placeholder="نام (اردو)" className="text-right urdu-text" required />
         </div>
-        <Select value={type} onValueChange={v => setType(v as "product" | "vehicle")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="product">Product</SelectItem><SelectItem value="vehicle">Vehicle</SelectItem></SelectContent></Select>
-        <Button type="submit" size="sm" disabled={createCategory.isPending}>Add</Button>
+        <Select value={type} onValueChange={v => setType(v as "product" | "vehicle")}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="product">Product</SelectItem><SelectItem value="vehicle">Vehicle</SelectItem></SelectContent>
+        </Select>
+        {/* Icon & Image inputs */}
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><ImageIcon className="w-3 h-3" /> آئیکن (emoji) یا تصویر کا لنک</p>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <p className="text-xs text-muted-foreground">Emoji آئیکن</p>
+              <Input value={icon} onChange={e => setIcon(e.target.value)} placeholder="🥦 🛺 🐄" className="text-center text-xl" maxLength={4} />
+            </div>
+            <div className="flex flex-col gap-1">
+              {icon && <span className="text-4xl text-center">{icon}</span>}
+            </div>
+          </div>
+          <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="یا تصویر کا URL paste کریں" className="text-xs" />
+          {imageUrl && (
+            <div className="w-full h-20 bg-muted rounded-lg overflow-hidden flex items-center justify-center border">
+              <img src={imageUrl} alt="preview" className="h-full w-full object-contain" onError={e => (e.currentTarget.style.display = "none")} />
+            </div>
+          )}
+        </div>
+        <Button type="submit" size="sm" disabled={createCategory.isPending}>Add Category</Button>
       </form>
+
+      {/* Category List */}
       <div className="flex flex-col gap-2">
         {categories?.map(c => (
-          <div key={c.id} className="bg-card border rounded-xl p-3 flex items-center justify-between shadow-sm">
-            <Button variant="destructive" size="sm" onClick={() => deleteCategory.mutate({ id: c.id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListCategoriesQueryKey() }) })}>Del</Button>
-            <div className="text-right"><p className="font-medium text-sm">{c.name}</p><p className="urdu-text text-xs text-muted-foreground">{c.nameUrdu}</p><Badge variant="outline" className="text-xs">{c.type}</Badge></div>
+          <div key={c.id} className="bg-card border rounded-xl overflow-hidden shadow-sm">
+            <div className="flex items-center gap-3 p-3">
+              {/* Icon / Image preview */}
+              <div className="w-14 h-14 rounded-xl bg-muted/40 border flex items-center justify-center shrink-0 overflow-hidden">
+                {c.imageUrl
+                  ? <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover" />
+                  : c.icon
+                    ? <span className="text-3xl">{c.icon}</span>
+                    : <Tag className="w-5 h-5 text-muted-foreground/40" />
+                }
+              </div>
+              {/* Info */}
+              <div className="flex-1 min-w-0 text-right">
+                <p className="font-medium text-sm truncate">{c.name}</p>
+                <p className="urdu-text text-xs text-muted-foreground truncate">{c.nameUrdu}</p>
+                <Badge variant="outline" className="text-xs">{c.type}</Badge>
+              </div>
+              {/* Actions */}
+              <div className="flex flex-col gap-1 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1 w-full"
+                  onClick={() => setExpandedIcon(expandedIcon === c.id ? null : c.id)}
+                >
+                  <ImageIcon className="w-3 h-3" />
+                  {c.icon || c.imageUrl ? "Edit" : "Add"} Icon
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 text-xs w-full"
+                  onClick={() => deleteCategory.mutate({ id: c.id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListCategoriesQueryKey() }) })}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+
+            {/* Inline icon/image edit panel */}
+            {expandedIcon === c.id && (
+              <CategoryIconEdit
+                currentIcon={c.icon}
+                currentImageUrl={c.imageUrl}
+                onSave={(newIcon, newImageUrl) => handleSaveIcon(c.id, newIcon, newImageUrl)}
+                isPending={updateCategory.isPending}
+              />
+            )}
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function CategoryIconEdit({ currentIcon, currentImageUrl, onSave, isPending }: {
+  currentIcon: string | null | undefined;
+  currentImageUrl: string | null | undefined;
+  onSave: (icon: string | null, imageUrl: string | null) => void;
+  isPending: boolean;
+}) {
+  const [icon, setIcon] = useState(currentIcon || "");
+  const [imageUrl, setImageUrl] = useState(currentImageUrl || "");
+  return (
+    <div className="flex flex-col gap-3 border-t bg-muted/30 p-3">
+      <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><ImageIcon className="w-3 h-3" /> آئیکن یا تصویر تبدیل کریں</p>
+      {/* Emoji icon */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <p className="text-xs text-muted-foreground mb-1">Emoji آئیکن (مثلاً 🥦 🛺)</p>
+          <Input value={icon} onChange={e => setIcon(e.target.value)} placeholder="Emoji paste کریں" className="text-center text-xl" maxLength={4} />
+        </div>
+        {icon && <span className="text-4xl">{icon}</span>}
+      </div>
+      {/* Image URL */}
+      <div>
+        <p className="text-xs text-muted-foreground mb-1">یا تصویر کا URL</p>
+        <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://example.com/icon.png" className="text-xs" />
+        {imageUrl && (
+          <div className="w-full h-24 bg-muted rounded-lg overflow-hidden flex items-center justify-center border mt-2">
+            <img src={imageUrl} alt="preview" className="h-full w-full object-contain" onError={e => (e.currentTarget.style.display = "none")} />
+          </div>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <Button size="sm" onClick={() => onSave(icon || null, imageUrl || null)} disabled={isPending} className="h-7 text-xs gap-1">
+          <Check className="w-3 h-3" /> محفوظ کریں
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => onSave(null, null)} disabled={isPending} className="h-7 text-xs gap-1 text-destructive hover:text-destructive">
+          <X className="w-3 h-3" /> ہٹائیں
+        </Button>
       </div>
     </div>
   );
