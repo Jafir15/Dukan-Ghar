@@ -17,8 +17,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { ShieldCheck, BarChart3, Package, Tag, Truck, ClipboardList, CreditCard } from "lucide-react";
+import { ShieldCheck, BarChart3, Package, Tag, Truck, ClipboardList, CreditCard, ImageIcon, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+function ImageEditRow({ currentUrl, onSave, isPending }: { currentUrl: string | null | undefined; onSave: (url: string | null) => void; isPending: boolean }) {
+  const [url, setUrl] = useState(currentUrl || "");
+  return (
+    <div className="flex flex-col gap-2 border-t pt-3 mt-1 bg-muted/30 rounded-lg p-3">
+      <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><ImageIcon className="w-3 h-3" /> Image URL (paste link)</p>
+      {url && (
+        <div className="w-full h-32 bg-muted rounded-lg overflow-hidden flex items-center justify-center border">
+          <img src={url} alt="preview" className="h-full w-full object-contain" onError={e => (e.currentTarget.style.display = "none")} />
+        </div>
+      )}
+      <Input
+        value={url}
+        onChange={e => setUrl(e.target.value)}
+        placeholder="https://example.com/image.jpg"
+        className="text-xs"
+      />
+      <div className="flex gap-2">
+        <Button size="sm" onClick={() => onSave(url || null)} disabled={isPending} className="h-7 text-xs gap-1">
+          <Check className="w-3 h-3" /> Save Image
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => onSave(null)} disabled={isPending} className="h-7 text-xs gap-1 text-destructive hover:text-destructive">
+          <X className="w-3 h-3" /> Remove
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 const STATUS_OPTIONS = ["pending", "packed", "on_the_way", "delivered"];
 const STATUS_LABELS: Record<string, string> = { pending: "زیرِ التواء", packed: "پیک ہوگیا", on_the_way: "راستے میں", delivered: "پہنچ گیا" };
@@ -163,37 +191,130 @@ function AdminProducts() {
   const deleteProduct = useDeleteProduct();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [name, setName] = useState(""); const [nameUrdu, setNameUrdu] = useState(""); const [price, setPrice] = useState(""); const [unit, setUnit] = useState("kg"); const [stock, setStock] = useState("10"); const [catId, setCatId] = useState("");
+  const [name, setName] = useState("");
+  const [nameUrdu, setNameUrdu] = useState("");
+  const [price, setPrice] = useState("");
+  const [unit, setUnit] = useState("kg");
+  const [stock, setStock] = useState("10");
+  const [catId, setCatId] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [expandedImg, setExpandedImg] = useState<number | null>(null);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    createProduct.mutate({ data: { name, nameUrdu, price: Number(price), unit: unit as "kg" | "gram" | "liter" | "pound" | "piece", stock: Number(stock), categoryId: catId ? Number(catId) : null, featured: false } }, {
-      onSuccess: () => { queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() }); setName(""); setNameUrdu(""); setPrice(""); setStock("10"); toast({ title: "Product added!" }); },
+    createProduct.mutate({
+      data: {
+        name, nameUrdu, price: Number(price),
+        unit: unit as "kg" | "gram" | "liter" | "pound" | "piece",
+        stock: Number(stock),
+        categoryId: catId ? Number(catId) : null,
+        featured: false,
+        imageUrl: imageUrl || null,
+      }
+    }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
+        setName(""); setNameUrdu(""); setPrice(""); setStock("10"); setImageUrl("");
+        toast({ title: "Product added!" });
+      },
+    });
+  };
+
+  const handleSaveImage = (id: number, url: string | null) => {
+    updateProduct.mutate({ id, data: { imageUrl: url } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
+        setExpandedImg(null);
+        toast({ title: url ? "تصویر محفوظ ہو گئی!" : "تصویر ہٹا دی گئی" });
+      },
     });
   };
 
   return (
     <div className="flex flex-col gap-4">
       <h2 className="urdu-text text-xl font-bold text-right">مصنوعات مینجمنٹ</h2>
+
+      {/* Create Form */}
       <form onSubmit={handleCreate} className="bg-card border rounded-xl p-4 flex flex-col gap-3 shadow-sm">
-        <h3 className="font-semibold text-sm">Add New Product</h3>
+        <h3 className="font-semibold text-sm">نئی مصنوعہ شامل کریں</h3>
         <div className="grid grid-cols-2 gap-2">
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="Name (English)" required />
           <Input value={nameUrdu} onChange={e => setNameUrdu(e.target.value)} placeholder="نام (اردو)" className="text-right urdu-text" required />
-          <Input value={price} onChange={e => setPrice(e.target.value)} placeholder="Price" type="number" required />
+          <Input value={price} onChange={e => setPrice(e.target.value)} placeholder="Price (Rs.)" type="number" required />
           <Input value={stock} onChange={e => setStock(e.target.value)} placeholder="Stock" type="number" />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <Select value={unit} onValueChange={setUnit}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{UNIT_OPTIONS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select>
-          <Select value={catId} onValueChange={setCatId}><SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger><SelectContent>{categories?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}</SelectContent></Select>
+          <Select value={unit} onValueChange={setUnit}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>{UNIT_OPTIONS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
+          </Select>
+          <Select value={catId} onValueChange={setCatId}>
+            <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+            <SelectContent>{categories?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        {/* Image URL for new product */}
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><ImageIcon className="w-3 h-3" /> تصویر کا لنک (اختیاری)</p>
+          <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" className="text-xs" />
+          {imageUrl && (
+            <div className="w-full h-24 bg-muted rounded-lg overflow-hidden flex items-center justify-center border">
+              <img src={imageUrl} alt="preview" className="h-full w-full object-contain" onError={e => (e.currentTarget.style.display = "none")} />
+            </div>
+          )}
         </div>
         <Button type="submit" disabled={createProduct.isPending} size="sm">Add Product</Button>
       </form>
+
+      {/* Product List */}
       <div className="flex flex-col gap-2">
         {products?.map(p => (
-          <div key={p.id} className="bg-card border rounded-xl p-3 flex items-center justify-between shadow-sm">
-            <Button variant="destructive" size="sm" onClick={() => { deleteProduct.mutate({ id: p.id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() }) }); }}>Del</Button>
-            <div className="text-right"><p className="font-medium text-sm">{p.name}</p><p className="urdu-text text-xs text-muted-foreground">{p.nameUrdu}</p><p className="text-xs">Rs. {p.price} / {p.unit}</p></div>
+          <div key={p.id} className="bg-card border rounded-xl overflow-hidden shadow-sm">
+            <div className="flex items-center gap-3 p-3">
+              {/* Thumbnail */}
+              <div className="w-14 h-14 rounded-lg bg-muted/40 border flex items-center justify-center shrink-0 overflow-hidden">
+                {p.imageUrl
+                  ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                  : <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+                }
+              </div>
+              {/* Info */}
+              <div className="flex-1 min-w-0 text-right">
+                <p className="font-medium text-sm truncate">{p.name}</p>
+                <p className="urdu-text text-xs text-muted-foreground truncate">{p.nameUrdu}</p>
+                <p className="text-xs text-primary font-semibold">Rs. {p.price} / {p.unit}</p>
+              </div>
+              {/* Actions */}
+              <div className="flex flex-col gap-1 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1 w-full"
+                  onClick={() => setExpandedImg(expandedImg === p.id ? null : p.id)}
+                >
+                  <ImageIcon className="w-3 h-3" />
+                  {p.imageUrl ? "Edit" : "Add"} Pic
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 text-xs w-full"
+                  onClick={() => deleteProduct.mutate({ id: p.id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() }) })}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+            {/* Inline image edit panel */}
+            {expandedImg === p.id && (
+              <div className="px-3 pb-3">
+                <ImageEditRow
+                  currentUrl={p.imageUrl}
+                  onSave={(url) => handleSaveImage(p.id, url)}
+                  isPending={updateProduct.isPending}
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -243,36 +364,128 @@ function AdminCategories() {
 function AdminVehicles() {
   const { data: vehicles } = useListVehicles({});
   const createVehicle = useCreateVehicle();
+  const updateVehicle = useUpdateVehicle();
   const deleteVehicle = useDeleteVehicle();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [name, setName] = useState(""); const [nameUrdu, setNameUrdu] = useState(""); const [type, setType] = useState("rickshaw"); const [rent, setRent] = useState("");
+  const [name, setName] = useState("");
+  const [nameUrdu, setNameUrdu] = useState("");
+  const [type, setType] = useState("rickshaw");
+  const [rent, setRent] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [expandedImg, setExpandedImg] = useState<number | null>(null);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    createVehicle.mutate({ data: { name, nameUrdu, type: type as "rickshaw" | "chigchi" | "carry_bolan" | "car" | "high_roof" | "bus", baseRent: Number(rent) } }, {
-      onSuccess: () => { queryClient.invalidateQueries({ queryKey: getListVehiclesQueryKey() }); setName(""); setNameUrdu(""); setRent(""); toast({ title: "Vehicle added!" }); },
+    createVehicle.mutate({
+      data: {
+        name, nameUrdu,
+        type: type as "rickshaw" | "chigchi" | "carry_bolan" | "car" | "high_roof" | "bus",
+        baseRent: Number(rent),
+        imageUrl: imageUrl || null,
+      }
+    }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListVehiclesQueryKey() });
+        setName(""); setNameUrdu(""); setRent(""); setImageUrl("");
+        toast({ title: "Vehicle added!" });
+      },
     });
+  };
+
+  const handleSaveImage = (id: number, url: string | null) => {
+    updateVehicle.mutate({ id, data: { imageUrl: url } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListVehiclesQueryKey() });
+        setExpandedImg(null);
+        toast({ title: url ? "تصویر محفوظ ہو گئی!" : "تصویر ہٹا دی گئی" });
+      },
+    });
+  };
+
+  const VEHICLE_TYPE_URDU: Record<string, string> = {
+    rickshaw: "رکشہ", chigchi: "چنگچی", carry_bolan: "کیری بولان",
+    car: "گاڑی", high_roof: "ہائی روف", bus: "بس",
   };
 
   return (
     <div className="flex flex-col gap-4">
       <h2 className="urdu-text text-xl font-bold text-right">گاڑی مینجمنٹ</h2>
+
+      {/* Create Form */}
       <form onSubmit={handleCreate} className="bg-card border rounded-xl p-4 flex flex-col gap-3 shadow-sm">
-        <h3 className="font-semibold text-sm">Add Vehicle</h3>
+        <h3 className="font-semibold text-sm">نئی گاڑی شامل کریں</h3>
         <div className="grid grid-cols-2 gap-2">
-          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Name" required />
-          <Input value={nameUrdu} onChange={e => setNameUrdu(e.target.value)} placeholder="نام" className="urdu-text text-right" required />
-          <Input value={rent} onChange={e => setRent(e.target.value)} placeholder="Base Rent" type="number" required />
-          <Select value={type} onValueChange={setType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{VEHICLE_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Name (English)" required />
+          <Input value={nameUrdu} onChange={e => setNameUrdu(e.target.value)} placeholder="نام (اردو)" className="urdu-text text-right" required />
+          <Input value={rent} onChange={e => setRent(e.target.value)} placeholder="Base Rent (Rs.)" type="number" required />
+          <Select value={type} onValueChange={setType}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>{VEHICLE_TYPES.map(t => <SelectItem key={t} value={t}>{VEHICLE_TYPE_URDU[t] || t} ({t})</SelectItem>)}</SelectContent>
+          </Select>
         </div>
-        <Button type="submit" size="sm" disabled={createVehicle.isPending}>Add</Button>
+        {/* Image URL for new vehicle */}
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><ImageIcon className="w-3 h-3" /> تصویر کا لنک (اختیاری)</p>
+          <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://example.com/vehicle.jpg" className="text-xs" />
+          {imageUrl && (
+            <div className="w-full h-24 bg-muted rounded-lg overflow-hidden flex items-center justify-center border">
+              <img src={imageUrl} alt="preview" className="h-full w-full object-contain" onError={e => (e.currentTarget.style.display = "none")} />
+            </div>
+          )}
+        </div>
+        <Button type="submit" size="sm" disabled={createVehicle.isPending}>Add Vehicle</Button>
       </form>
+
+      {/* Vehicle List */}
       <div className="flex flex-col gap-2">
         {vehicles?.map(v => (
-          <div key={v.id} className="bg-card border rounded-xl p-3 flex items-center justify-between shadow-sm">
-            <Button variant="destructive" size="sm" onClick={() => deleteVehicle.mutate({ id: v.id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListVehiclesQueryKey() }) })}>Del</Button>
-            <div className="text-right"><p className="font-medium text-sm">{v.name}</p><p className="urdu-text text-xs text-muted-foreground">{v.nameUrdu}</p><p className="text-xs">Rs. {v.baseRent}+ | {v.type}</p></div>
+          <div key={v.id} className="bg-card border rounded-xl overflow-hidden shadow-sm">
+            <div className="flex items-center gap-3 p-3">
+              {/* Thumbnail */}
+              <div className="w-14 h-14 rounded-lg bg-muted/40 border flex items-center justify-center shrink-0 overflow-hidden">
+                {v.imageUrl
+                  ? <img src={v.imageUrl} alt={v.name} className="w-full h-full object-cover" />
+                  : <Truck className="w-5 h-5 text-muted-foreground/40" />
+                }
+              </div>
+              {/* Info */}
+              <div className="flex-1 min-w-0 text-right">
+                <p className="font-medium text-sm truncate">{v.name}</p>
+                <p className="urdu-text text-xs text-muted-foreground truncate">{v.nameUrdu}</p>
+                <p className="text-xs text-primary font-semibold">Rs. {v.baseRent}+ | {v.type}</p>
+              </div>
+              {/* Actions */}
+              <div className="flex flex-col gap-1 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1 w-full"
+                  onClick={() => setExpandedImg(expandedImg === v.id ? null : v.id)}
+                >
+                  <ImageIcon className="w-3 h-3" />
+                  {v.imageUrl ? "Edit" : "Add"} Pic
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 text-xs w-full"
+                  onClick={() => deleteVehicle.mutate({ id: v.id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListVehiclesQueryKey() }) })}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+            {/* Inline image edit panel */}
+            {expandedImg === v.id && (
+              <div className="px-3 pb-3">
+                <ImageEditRow
+                  currentUrl={v.imageUrl}
+                  onSave={(url) => handleSaveImage(v.id, url)}
+                  isPending={updateVehicle.isPending}
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>
