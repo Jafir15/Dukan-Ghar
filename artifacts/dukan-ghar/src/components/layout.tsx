@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { Search, ShoppingBag, Truck, MapPin, Package, Home, Moon, Sun, ClipboardList } from "lucide-react";
+import { ShoppingBag, Truck, MapPin, Package, Home, Moon, Sun, ClipboardList, Phone, Mail, Lock } from "lucide-react";
 import { useCart } from "./cart-context";
 import { useTheme } from "./theme-provider";
 import { Button } from "./ui/button";
@@ -26,7 +26,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
           </Button>
-          <Link href="/track" className="text-primary-foreground hover:text-primary-foreground/80 transition-colors">
+          <Link href="/orders" className="text-primary-foreground hover:text-primary-foreground/80 transition-colors">
             <MapPin size={22} />
           </Link>
           <Link href="/cart" className="relative text-primary-foreground hover:text-primary-foreground/80 transition-colors">
@@ -41,16 +41,54 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pb-20 flex flex-col">
+      <main className="flex-1 flex flex-col">
         {children}
       </main>
+
+      {/* Footer */}
+      <footer className="bg-card border-t border-border px-5 pt-6 pb-2 mb-16">
+        <div className="text-right mb-4">
+          <p className="urdu-text text-xl font-bold text-primary">دکان گھر</p>
+          <p className="urdu-text text-sm text-muted-foreground mt-0.5">آپ کی روزمرہ کی ضروریات کا گھر</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="text-right">
+            <p className="urdu-text text-sm font-semibold mb-2 text-foreground">فوری لنکس</p>
+            <div className="flex flex-col gap-1.5">
+              <Link href="/" className="urdu-text text-xs text-muted-foreground hover:text-primary transition-colors">🏠 ہوم</Link>
+              <Link href="/products" className="urdu-text text-xs text-muted-foreground hover:text-primary transition-colors">📦 مصنوعات</Link>
+              <Link href="/transport" className="urdu-text text-xs text-muted-foreground hover:text-primary transition-colors">🚗 ٹرانسپورٹ</Link>
+              <Link href="/orders" className="urdu-text text-xs text-muted-foreground hover:text-primary transition-colors">📋 آرڈر ٹریک کریں</Link>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="urdu-text text-sm font-semibold mb-2 text-foreground">رابطہ کریں</p>
+            <div className="flex flex-col gap-1.5">
+              <a href="tel:03001234567" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center justify-end gap-1">
+                0300-1234567 <Phone className="w-3 h-3" />
+              </a>
+              <a href="mailto:jafir0691824@gmail.com" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center justify-end gap-1 break-all">
+                jafir0691824@gmail.com <Mail className="w-3 h-3 shrink-0" />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-border pt-2 flex items-center justify-between">
+          <Link href="/admin/secure-panel" className="flex items-center gap-1 text-[10px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">
+            <Lock className="w-2.5 h-2.5" /> Admin
+          </Link>
+          <p className="urdu-text text-[10px] text-muted-foreground/50">© 2025 دکان گھر</p>
+        </div>
+      </footer>
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 w-full max-w-[430px] bg-card border-t border-border flex justify-between px-2 py-2 pb-safe z-50 rounded-t-xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">
         <BottomNavItem href="/" icon={<Home size={22} />} label="Home" active={location === "/"} />
         <BottomNavItem href="/products" icon={<Package size={22} />} label="Products" active={location === "/products" || location.startsWith("/category")} />
         <BottomNavItem href="/transport" icon={<Truck size={22} />} label="Transport" active={location === "/transport"} />
-        <BottomNavItem href="/orders" icon={<ClipboardList size={22} />} label="Orders" active={location === "/orders"} />
+        <BottomNavItem href="/orders" icon={<ClipboardList size={22} />} label="Orders" active={location === "/orders" || location.startsWith("/track")} />
         <BottomNavItem href="/cart" icon={<ShoppingBag size={22} />} label="Cart" active={location === "/cart"} badge={totalItems} />
       </nav>
     </div>
