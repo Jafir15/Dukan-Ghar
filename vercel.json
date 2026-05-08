@@ -1,4 +1,11 @@
 {
   "version": 2,
-  "cleanUrls": true
+  "public": true,
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "**/*.{js,css,png,jpg,svg,ttf}", "use": "@vercel/static" }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
