@@ -9,6 +9,7 @@ import { useCart } from "@/components/cart-context";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { resolveMediaUrl } from "@/lib/media";
 
 function ProductListCard({ product }: { product: Product }) {
   const { items, addToCart, updateQuantity } = useCart();
@@ -28,8 +29,8 @@ function ProductListCard({ product }: { product: Product }) {
   return (
     <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex items-stretch p-3 gap-3">
       <div className="w-24 h-24 bg-muted/20 rounded-lg flex items-center justify-center shrink-0">
-        {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain p-2" />
+        {resolveMediaUrl(product.imageUrl) ? (
+          <img src={resolveMediaUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-contain p-2" />
         ) : (
           <div className="w-10 h-10 bg-primary/10 rounded-full" />
         )}

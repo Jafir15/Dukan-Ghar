@@ -5,6 +5,15 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+const allowedOrigins = [
+  process.env["VERCEL_URL"] ? `https://${process.env["VERCEL_URL"]}` : null,
+  ...(process.env["VERCEL_PROJECT_PRODUCTION_URL"]
+    ? [`https://${process.env["VERCEL_PROJECT_PRODUCTION_URL"]}`]
+    : []),
+  ...(process.env["REPLIT_DOMAINS"]
+    ? process.env["REPLIT_DOMAINS"].split(",").map((d) => `https://${d.trim()}`)
+    : []),
+].filter((value): value is string => Boolean(value));
 
 app.use(
   pinoHttp({
@@ -25,7 +34,22 @@ app.use(
     },
   }),
 );
-app.use(cors());
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error("CORS blocked"));
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

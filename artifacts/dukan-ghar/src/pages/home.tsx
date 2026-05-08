@@ -6,6 +6,7 @@ import { Layout } from "@/components/layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { resolveMediaUrl } from "@/lib/media";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,8 +83,8 @@ export default function Home() {
               categories?.map(category => (
                 <Link key={category.id} href={`/category/${category.id}`} className="flex flex-col items-center gap-2 group">
                   <div className="w-full aspect-square bg-card border rounded-2xl shadow-sm overflow-hidden flex items-center justify-center p-2 group-hover:border-primary transition-colors hover-elevate">
-                    {category.imageUrl ? (
-                      <img src={category.imageUrl} alt={category.name} className="w-full h-full object-contain" />
+                    {resolveMediaUrl(category.imageUrl) ? (
+                      <img src={resolveMediaUrl(category.imageUrl)} alt={category.name} className="w-full h-full object-contain" />
                     ) : category.icon ? (
                       <span className="text-3xl">{category.icon}</span>
                     ) : (
@@ -122,9 +123,9 @@ export default function Home() {
                 >
                   {/* Image — full width, no overlay */}
                   <div className="w-full aspect-square bg-muted/20 flex items-center justify-center overflow-hidden">
-                    {product.imageUrl ? (
+                    {resolveMediaUrl(product.imageUrl) ? (
                       <img
-                        src={product.imageUrl}
+                        src={resolveMediaUrl(product.imageUrl)}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />

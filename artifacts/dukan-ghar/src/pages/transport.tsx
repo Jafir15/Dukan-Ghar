@@ -12,6 +12,7 @@ import { Truck, Clock, CheckCircle, X, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSessionId } from "@/lib/session";
 import { useQueryClient } from "@tanstack/react-query";
+import { resolveMediaUrl } from "@/lib/media";
 
 const VEHICLE_TYPES: Record<string, string> = {
   rickshaw: "رکشہ",
@@ -105,8 +106,8 @@ export default function Transport() {
                   className="bg-card border rounded-xl p-4 flex flex-col gap-2 shadow-sm hover-elevate hover:border-primary/40 transition-colors text-left group cursor-pointer"
                 >
                   <div className="w-full aspect-square bg-muted/20 rounded-lg flex items-center justify-center mb-2 group-hover:bg-primary/5 transition-colors">
-                    {v.imageUrl ? (
-                      <img src={v.imageUrl} alt={v.name} className="w-full h-full object-contain p-4" />
+                    {resolveMediaUrl(v.imageUrl) ? (
+                      <img src={resolveMediaUrl(v.imageUrl)} alt={v.name} className="w-full h-full object-contain p-4" />
                     ) : (
                       <Truck className="w-12 h-12 text-primary/40" />
                     )}

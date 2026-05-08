@@ -4,6 +4,7 @@ import { Layout } from "@/components/layout";
 import { useCart } from "@/components/cart-context";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { resolveMediaUrl } from "@/lib/media";
 import { ChevronLeft, Plus, Minus, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,9 +27,9 @@ function ProductCard({ product }: { product: Product }) {
     <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col group">
       {/* Big image — no overlay */}
       <div className="w-full aspect-square bg-muted/20 flex items-center justify-center overflow-hidden">
-        {product.imageUrl ? (
+        {resolveMediaUrl(product.imageUrl) ? (
           <img
-            src={product.imageUrl}
+            src={resolveMediaUrl(product.imageUrl)}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -88,7 +89,7 @@ export default function Category() {
 
   const { data: products, isLoading } = useListProducts(
     { categoryId },
-    { query: { enabled: !!categoryId } }
+    { query: { enabled: !!categoryId, queryKey: ["category-products", categoryId] } }
   );
 
   return (
