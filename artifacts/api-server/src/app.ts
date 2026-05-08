@@ -6,6 +6,7 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 const allowedOrigins = [
+  "https://dukan-ghar-api-server-git-main-jafir15s-projects.vercel.app",
   process.env["VERCEL_URL"] ? `https://${process.env["VERCEL_URL"]}` : null,
   ...(process.env["VERCEL_PROJECT_PRODUCTION_URL"]
     ? [`https://${process.env["VERCEL_PROJECT_PRODUCTION_URL"]}`]
